@@ -10,6 +10,7 @@ export type Transaction = {
   total_price: number;
   recipients_count: number;
   tubes_distribution: string;
+  is_picked_up?: boolean;
 };
 
 export type StockHistory = {

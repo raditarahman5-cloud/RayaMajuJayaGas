@@ -5,13 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Download, Search } from "lucide-react";
+import { Download, Search, Check, X } from "lucide-react";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import type { Transaction } from "@/lib/store";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
+import { updateTransactionStatus } from "@/app/actions";
 
 export function LaporanClient({ transactions, settings }: { transactions: Transaction[], settings: any }) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -120,7 +121,31 @@ export function LaporanClient({ transactions, settings }: { transactions: Transa
                       <TableCell className="whitespace-nowrap text-xs sm:text-sm">
                         {format(new Date(t.created_at), 'dd MMM yyyy HH:mm', { locale: id })}
                       </TableCell>
-                      <TableCell className="font-medium text-xs sm:text-sm">{t.buyer_name}</TableCell>
+                      <TableCell className="font-medium text-xs sm:text-sm">
+                        <div className="flex items-center justify-between gap-2">
+                          <span>{t.buyer_name}</span>
+                          <div className="flex items-center gap-1">
+                            <Button 
+                              variant={t.is_picked_up ? "default" : "outline"} 
+                              size="icon" 
+                              className={`h-6 w-6 ${t.is_picked_up ? "bg-green-500 hover:bg-green-600 text-white" : ""}`}
+                              onClick={async () => await updateTransactionStatus(t.id, true)}
+                              title="Sudah Diambil"
+                            >
+                              <Check className="h-3 w-3" />
+                            </Button>
+                            <Button 
+                              variant={t.is_picked_up === false ? "destructive" : "outline"} 
+                              size="icon" 
+                              className="h-6 w-6"
+                              onClick={async () => await updateTransactionStatus(t.id, false)}
+                              title="Belum Diambil"
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      </TableCell>
                       <TableCell className="text-center font-bold text-orange-600 dark:text-orange-400 text-xs sm:text-sm">{t.tubes_count}</TableCell>
                       <TableCell className="hidden sm:table-cell text-right text-xs sm:text-sm">Rp {(settings.selling_price / 1000).toFixed(0)}k</TableCell>
                       <TableCell className="text-right font-medium text-xs sm:text-sm">Rp {(t.tubes_count * settings.selling_price).toLocaleString('id-ID')}</TableCell>

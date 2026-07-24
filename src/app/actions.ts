@@ -72,7 +72,8 @@ export async function addTransaction(buyerName: string, tubesCount: number) {
     price_per_tube: db.settings.selling_price,
     total_price: tubesCount * db.settings.selling_price,
     recipients_count: totalRecipients,
-    tubes_distribution: distributionText
+    tubes_distribution: distributionText,
+    is_picked_up: false
   };
 
   const history: StockHistory = {
@@ -162,4 +163,16 @@ export async function getTransactions() {
 
 export async function getStockHistory() {
   return getDb().stockHistory.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+}
+
+export async function updateTransactionStatus(id: string, is_picked_up: boolean) {
+  const db = getDb();
+  const txIndex = db.transactions.findIndex(t => t.id === id);
+  if (txIndex !== -1) {
+    db.transactions[txIndex].is_picked_up = is_picked_up;
+    saveDb(db);
+    revalidatePath("/laporan");
+    return { success: true };
+  }
+  return { success: false, error: "Transaction not found" };
 }
