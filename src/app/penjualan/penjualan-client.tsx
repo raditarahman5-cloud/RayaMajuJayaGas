@@ -26,17 +26,22 @@ export function PenjualanClient({ settings }: { settings: any }) {
       return;
     }
 
-    setLoading(true);
-    const res = await addTransaction(buyerName, tubesCount);
-    setLoading(false);
-
-    if (res.success) {
-      toast({ title: "Berhasil", description: "Transaksi berhasil disimpan." });
-      setBuyerName("");
-      setAmount("");
-      router.push("/laporan");
-    } else {
-      toast({ title: "Gagal", description: res.error, variant: "destructive" });
+    try {
+      setLoading(true);
+      const res = await addTransaction(buyerName, tubesCount);
+      
+      if (res.success) {
+        toast({ title: "Berhasil", description: "Transaksi berhasil disimpan." });
+        setBuyerName("");
+        setAmount("");
+        router.push("/laporan");
+      } else {
+        toast({ title: "Gagal", description: res.error, variant: "destructive" });
+      }
+    } catch (error: any) {
+      toast({ title: "Gagal", description: error?.message || "Terjadi kesalahan sistem", variant: "destructive" });
+    } finally {
+      setLoading(false);
     }
   };
 

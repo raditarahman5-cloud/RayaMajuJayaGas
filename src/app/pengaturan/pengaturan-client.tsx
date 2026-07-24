@@ -18,15 +18,19 @@ export function PengaturanClient({ settings }: { settings: any }) {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    
-    const res = await updateSettings(Number(sellingPrice), Number(capitalPrice), Number(maxCapacity));
-    setLoading(false);
-    
-    if (res.success) {
-      toast({ title: "Berhasil", description: "Pengaturan telah diperbarui." });
-    } else {
-      toast({ title: "Gagal", description: "Terjadi kesalahan saat menyimpan.", variant: "destructive" });
+    try {
+      setLoading(true);
+      const res = await updateSettings(Number(sellingPrice), Number(capitalPrice), Number(maxCapacity));
+      
+      if (res.success) {
+        toast({ title: "Berhasil", description: "Pengaturan telah diperbarui." });
+      } else {
+        toast({ title: "Gagal", description: "Terjadi kesalahan saat menyimpan.", variant: "destructive" });
+      }
+    } catch (error: any) {
+      toast({ title: "Gagal", description: error?.message || "Terjadi kesalahan sistem", variant: "destructive" });
+    } finally {
+      setLoading(false);
     }
   };
 

@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 
 export type Transaction = {
   id: string;
@@ -36,7 +37,10 @@ export type DbSchema = {
   settings: Settings;
 };
 
-const DB_PATH = path.join(process.cwd(), 'local-db.json');
+const isProduction = process.env.NODE_ENV === 'production';
+const DB_PATH = isProduction 
+  ? path.join(os.tmpdir(), 'local-db.json') 
+  : path.join(process.cwd(), 'local-db.json');
 
 const defaultDb: DbSchema = {
   transactions: [],
@@ -50,6 +54,11 @@ const defaultDb: DbSchema = {
 };
 
 export function getDb(): DbSchema {
+  const dir = path.dirname(DB_PATH);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+
   if (!fs.existsSync(DB_PATH)) {
     fs.writeFileSync(DB_PATH, JSON.stringify(defaultDb, null, 2));
     return defaultDb;
