@@ -99,13 +99,13 @@ export function LaporanClient({ transactions, settings }: { transactions: Transa
             <Table>
               <TableHeader className="bg-slate-50 dark:bg-slate-900/50">
                 <TableRow>
-                  <TableHead className="whitespace-nowrap">ID Trx</TableHead>
-                  <TableHead className="whitespace-nowrap">Tanggal</TableHead>
-                  <TableHead className="whitespace-nowrap">Pembeli</TableHead>
-                  <TableHead className="text-center">Tabung</TableHead>
-                  <TableHead className="text-right">Harga</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                  <TableHead className="whitespace-nowrap">Distribusi</TableHead>
+                  <TableHead className="hidden md:table-cell whitespace-nowrap">ID Trx</TableHead>
+                  <TableHead className="whitespace-nowrap text-xs sm:text-sm">Tanggal</TableHead>
+                  <TableHead className="whitespace-nowrap text-xs sm:text-sm">Pembeli</TableHead>
+                  <TableHead className="text-center text-xs sm:text-sm">Tabung</TableHead>
+                  <TableHead className="hidden sm:table-cell text-right text-xs sm:text-sm">Harga</TableHead>
+                  <TableHead className="text-right text-xs sm:text-sm">Total</TableHead>
+                  <TableHead className="hidden lg:table-cell whitespace-nowrap text-xs sm:text-sm">Distribusi</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -116,15 +116,15 @@ export function LaporanClient({ transactions, settings }: { transactions: Transa
                 ) : (
                   filtered.map((t) => (
                     <TableRow key={t.id}>
-                      <TableCell className="font-medium text-xs text-slate-500">{t.id}</TableCell>
-                      <TableCell className="whitespace-nowrap">
+                      <TableCell className="hidden md:table-cell font-medium text-xs text-slate-500">{t.id}</TableCell>
+                      <TableCell className="whitespace-nowrap text-xs sm:text-sm">
                         {format(new Date(t.created_at), 'dd MMM yyyy HH:mm', { locale: id })}
                       </TableCell>
-                      <TableCell className="font-medium">{t.buyer_name}</TableCell>
-                      <TableCell className="text-center font-bold text-orange-600 dark:text-orange-400">{t.tubes_count}</TableCell>
-                      <TableCell className="text-right">Rp {(settings.selling_price / 1000).toFixed(0)}k</TableCell>
-                      <TableCell className="text-right font-medium">Rp {(t.tubes_count * settings.selling_price).toLocaleString('id-ID')}</TableCell>
-                      <TableCell className="text-xs text-slate-500 min-w-[200px]">
+                      <TableCell className="font-medium text-xs sm:text-sm">{t.buyer_name}</TableCell>
+                      <TableCell className="text-center font-bold text-orange-600 dark:text-orange-400 text-xs sm:text-sm">{t.tubes_count}</TableCell>
+                      <TableCell className="hidden sm:table-cell text-right text-xs sm:text-sm">Rp {(settings.selling_price / 1000).toFixed(0)}k</TableCell>
+                      <TableCell className="text-right font-medium text-xs sm:text-sm">Rp {(t.tubes_count * settings.selling_price).toLocaleString('id-ID')}</TableCell>
+                      <TableCell className="hidden lg:table-cell text-xs text-slate-500 min-w-[200px]">
                         {t.tubes_distribution}
                       </TableCell>
                     </TableRow>

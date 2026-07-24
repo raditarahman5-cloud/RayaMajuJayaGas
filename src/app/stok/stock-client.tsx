@@ -102,11 +102,11 @@ export function StockClient({ settings, history }: { settings: any, history: any
                 <Table>
                   <TableHeader className="bg-slate-50 dark:bg-slate-900/50">
                     <TableRow>
-                      <TableHead>Waktu</TableHead>
-                      <TableHead>Tipe</TableHead>
-                      <TableHead>Jumlah</TableHead>
-                      <TableHead>Sisa Stok</TableHead>
-                      <TableHead>Keterangan</TableHead>
+                      <TableHead className="whitespace-nowrap text-xs sm:text-sm">Waktu</TableHead>
+                      <TableHead className="text-xs sm:text-sm">Tipe</TableHead>
+                      <TableHead className="text-center text-xs sm:text-sm">Jumlah</TableHead>
+                      <TableHead className="hidden sm:table-cell text-xs sm:text-sm">Sisa Stok</TableHead>
+                      <TableHead className="hidden md:table-cell text-xs sm:text-sm">Keterangan</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -117,21 +117,21 @@ export function StockClient({ settings, history }: { settings: any, history: any
                     ) : (
                       history.map((h) => (
                         <TableRow key={h.id}>
-                          <TableCell className="whitespace-nowrap">
+                          <TableCell className="whitespace-nowrap text-xs sm:text-sm">
                             {format(new Date(h.created_at), 'dd MMM yyyy HH:mm', { locale: id })}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-xs sm:text-sm">
                             {h.type === 'IN' ? (
-                              <Badge className="bg-green-100 text-green-700 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400"><ArrowDownRight className="mr-1 h-3 w-3" /> Masuk</Badge>
+                              <Badge className="bg-green-100 text-green-700 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400 text-[10px] sm:text-xs"><ArrowDownRight className="mr-1 h-3 w-3" /> Masuk</Badge>
                             ) : (
-                              <Badge className="bg-red-100 text-red-700 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400"><ArrowUpRight className="mr-1 h-3 w-3" /> Keluar</Badge>
+                              <Badge className="bg-red-100 text-red-700 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 text-[10px] sm:text-xs"><ArrowUpRight className="mr-1 h-3 w-3" /> Keluar</Badge>
                             )}
                           </TableCell>
-                          <TableCell className="font-medium">
+                          <TableCell className="font-medium text-center text-xs sm:text-sm">
                             {h.type === 'IN' ? '+' : '-'}{h.amount}
                           </TableCell>
-                          <TableCell>{h.after_stock}</TableCell>
-                          <TableCell className="text-slate-500 max-w-[200px] truncate" title={h.description}>
+                          <TableCell className="hidden sm:table-cell text-xs sm:text-sm">{h.after_stock}</TableCell>
+                          <TableCell className="hidden md:table-cell text-slate-500 max-w-[200px] truncate text-xs sm:text-sm" title={h.description}>
                             {h.description}
                           </TableCell>
                         </TableRow>
