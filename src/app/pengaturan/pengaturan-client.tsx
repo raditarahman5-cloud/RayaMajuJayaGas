@@ -7,13 +7,15 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { updateSettings, resetDailyStats } from "@/app/actions";
 import { useToast } from "@/hooks/use-toast";
-import { Settings, Save, RotateCcw } from "lucide-react";
+import { Settings, Save, RotateCcw, AlertTriangle } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter as DialogFooterUI, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 
 export function PengaturanClient({ settings }: { settings: any }) {
   const [sellingPrice, setSellingPrice] = useState(settings.selling_price.toString());
   const [capitalPrice, setCapitalPrice] = useState(settings.capital_price.toString());
   const [maxCapacity, setMaxCapacity] = useState(settings.max_capacity.toString());
   const [loading, setLoading] = useState(false);
+  const [isResetOpen, setIsResetOpen] = useState(false);
   const { toast } = useToast();
 
   const handleSave = async (e: React.FormEvent) => {
@@ -35,8 +37,6 @@ export function PengaturanClient({ settings }: { settings: any }) {
   };
 
   const handleReset = async () => {
-    if (!confirm("Apakah Anda yakin ingin mereset stok ke 0 dan mereset antrian hari ini? Riwayat transaksi akan tetap tersimpan.")) return;
-    
     try {
       setLoading(true);
       const res = await resetDailyStats();
@@ -126,16 +126,43 @@ export function PengaturanClient({ settings }: { settings: any }) {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button 
-              type="button" 
-              variant="destructive" 
-              onClick={handleReset} 
-              disabled={loading}
-              className="w-full sm:w-auto gap-2"
-            >
-              <RotateCcw className="h-4 w-4" />
-              Reset Dari 0 Semua
-            </Button>
+            <Dialog open={isResetOpen} onOpenChange={setIsResetOpen}>
+              <DialogTrigger render={<Button 
+                  type="button" 
+                  variant="destructive" 
+                  className="w-full sm:w-auto gap-2"
+                />}>
+                  <RotateCcw className="h-4 w-4" />
+                  Reset Dari 0 Semua
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2 text-red-600">
+                    <AlertTriangle className="h-5 w-5" />
+                    Konfirmasi Reset Sesi
+                  </DialogTitle>
+                  <DialogDescription className="text-slate-600 dark:text-slate-300">
+                    Apakah Anda yakin ingin mereset sesi ini? Stok akan diubah menjadi 0 dan daftar pelanggan hari ini akan disembunyikan. 
+                    <br/><br/>
+                    <strong>Catatan:</strong> Riwayat pendapatan dan penjualan akan tetap aman dan bisa dilihat di tab "Riwayat".
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooterUI className="sm:justify-end gap-2">
+                  <DialogClose render={<Button type="button" variant="outline" />}>
+                    Batal
+                  </DialogClose>
+                  <Button 
+                    type="button" 
+                    variant="destructive" 
+                    onClick={handleReset} 
+                    disabled={loading}
+                    className="gap-2"
+                  >
+                    {loading ? "Mereset..." : "Ya, Reset Sesi"}
+                  </Button>
+                </DialogFooterUI>
+              </DialogContent>
+            </Dialog>
           </CardContent>
         </Card>
       </div>

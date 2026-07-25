@@ -16,11 +16,20 @@ import { updateTransactionStatus } from "@/app/actions";
 
 export function LaporanClient({ transactions, settings }: { transactions: Transaction[], settings: any }) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState<'today' | 'all'>('today');
 
-  const filtered = transactions.filter(t => 
-    t.buyer_name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    t.id.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const lastResetTime = settings.last_reset_time ? new Date(settings.last_reset_time).getTime() : 0;
+
+  const filtered = transactions.filter(t => {
+    const matchesSearch = t.buyer_name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          t.id.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    if (activeTab === 'today') {
+      const isAfterReset = new Date(t.created_at).getTime() >= lastResetTime;
+      return matchesSearch && isAfterReset;
+    }
+    return matchesSearch;
+  });
 
   const exportToExcel = () => {
     const dataToExport = filtered.map(t => ({
@@ -85,14 +94,30 @@ export function LaporanClient({ transactions, settings }: { transactions: Transa
 
       <Card className="shadow-sm">
         <CardHeader className="pb-3 border-b">
-          <div className="flex items-center gap-2 max-w-sm">
-            <Search className="h-4 w-4 text-slate-400" />
-            <Input 
-              placeholder="Cari nama pembeli atau ID..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-9"
-            />
+          <div className="flex flex-col sm:flex-row gap-4 sm:items-center justify-between">
+            <div className="flex items-center gap-2 max-w-sm">
+              <Search className="h-4 w-4 text-slate-400" />
+              <Input 
+                placeholder="Cari nama pembeli atau ID..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="h-9"
+              />
+            </div>
+            <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+              <button 
+                onClick={() => setActiveTab('today')}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${activeTab === 'today' ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+              >
+                Sesi Saat Ini
+              </button>
+              <button 
+                onClick={() => setActiveTab('all')}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${activeTab === 'all' ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+              >
+                Riwayat Semua
+              </button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">
