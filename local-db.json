@@ -5,6 +5,6 @@
     "selling_price": 25000,
     "capital_price": 18000,
     "max_capacity": 200,
-    "current_stock": 0
+    "current_stock": 200
   }
 }

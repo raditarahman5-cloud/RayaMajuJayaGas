@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { getTransactions, getSettings } from "@/app/actions";
 import { LaporanClient } from "./laporan-client";
 

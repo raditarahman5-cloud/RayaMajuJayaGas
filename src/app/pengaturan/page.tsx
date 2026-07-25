@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { getSettings } from "@/app/actions";
 import { PengaturanClient } from "./pengaturan-client";
 

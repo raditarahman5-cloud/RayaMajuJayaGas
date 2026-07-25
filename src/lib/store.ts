@@ -61,13 +61,13 @@ export function getDb(): DbSchema {
 
   if (!fs.existsSync(DB_PATH)) {
     fs.writeFileSync(DB_PATH, JSON.stringify(defaultDb, null, 2));
-    return defaultDb;
+    return JSON.parse(JSON.stringify(defaultDb));
   }
   try {
     const data = fs.readFileSync(DB_PATH, 'utf-8');
     return JSON.parse(data);
   } catch (error) {
-    return defaultDb;
+    return JSON.parse(JSON.stringify(defaultDb));
   }
 }
 

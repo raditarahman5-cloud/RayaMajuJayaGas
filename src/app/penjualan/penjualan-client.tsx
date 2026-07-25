@@ -46,9 +46,6 @@ export function PenjualanClient({ settings }: { settings: any }) {
   };
 
   const amountNum = Number(amount) || 0;
-  const fullRecipients = Math.floor(amountNum / 2);
-  const remainder = amountNum % 2;
-  const totalRecipients = fullRecipients + (remainder > 0 ? 1 : 0);
 
   return (
     <div className="space-y-6">
@@ -115,30 +112,6 @@ export function PenjualanClient({ settings }: { settings: any }) {
             </CardContent>
           </Card>
 
-          <Card className="shadow-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Users className="h-5 w-5 text-slate-500" />
-                Estimasi Distribusi
-              </CardTitle>
-              <CardDescription>Sesuai aturan maksimal 2 tabung per orang.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {amountNum > 0 ? (
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between border-b pb-2">
-                    <span className="text-slate-500">Total Penerima:</span>
-                    <span className="font-semibold">{totalRecipients} Orang</span>
-                  </div>
-                  <ul className="list-disc pl-5 text-slate-600 dark:text-slate-400 mt-2 space-y-1">
-                    {fullRecipients > 0 && <li>{fullRecipients} orang memperoleh 2 tabung</li>}
-                    {remainder > 0 && <li>1 orang memperoleh 1 tabung</li>}
-                  </ul>
-                </div>
-              ) : (
-                <p className="text-sm text-slate-400 italic">Masukkan jumlah tabung untuk melihat estimasi distribusi.</p>
-              )}
-            </CardContent>
           </Card>
         </div>
       </div>

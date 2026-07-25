@@ -37,8 +37,7 @@ export async function addStock(amount: number, description: string) {
   db.stockHistory.push(history);
   saveDb(db);
   
-  revalidatePath("/");
-  revalidatePath("/stok");
+  revalidatePath("/", "layout");
   return { success: true };
 }
 
@@ -49,17 +48,8 @@ export async function addTransaction(buyerName: string, tubesCount: number) {
   if (tubesCount > db.settings.current_stock) return { success: false, error: "Stok tidak mencukupi." };
   if (db.settings.current_stock === 0) return { success: false, error: "Stok sedang kosong." };
 
-  // Hitung pembagian (maks 2 tabung per orang)
-  const fullRecipients = Math.floor(tubesCount / 2);
-  const remainder = tubesCount % 2;
-  const totalRecipients = fullRecipients + (remainder > 0 ? 1 : 0);
-  
-  let distributionText = `${fullRecipients} orang memperoleh 2 tabung`;
-  if (remainder > 0) {
-    distributionText += ` dan 1 orang memperoleh 1 tabung`;
-  } else if (fullRecipients === 0) {
-    distributionText = `1 orang memperoleh 1 tabung`;
-  }
+  const distributionText = `${tubesCount} tabung`;
+  const totalRecipients = 1;
 
   const before_stock = db.settings.current_stock;
   db.settings.current_stock -= tubesCount;
@@ -90,9 +80,7 @@ export async function addTransaction(buyerName: string, tubesCount: number) {
   db.stockHistory.push(history);
   saveDb(db);
 
-  revalidatePath("/");
-  revalidatePath("/penjualan");
-  revalidatePath("/laporan");
+  revalidatePath("/", "layout");
   return { success: true };
 }
 
@@ -152,8 +140,7 @@ export async function updateSettings(sellingPrice: number, capitalPrice: number,
   db.settings.max_capacity = maxCapacity;
   saveDb(db);
   
-  revalidatePath("/");
-  revalidatePath("/pengaturan");
+  revalidatePath("/", "layout");
   return { success: true };
 }
 
@@ -171,7 +158,7 @@ export async function updateTransactionStatus(id: string, is_picked_up: boolean)
   if (txIndex !== -1) {
     db.transactions[txIndex].is_picked_up = is_picked_up;
     saveDb(db);
-    revalidatePath("/laporan");
+    revalidatePath("/", "layout");
     return { success: true };
   }
   return { success: false, error: "Transaction not found" };

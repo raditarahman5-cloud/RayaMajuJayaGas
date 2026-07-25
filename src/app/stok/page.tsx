@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { getSettings, getStockHistory } from "@/app/actions";
 import { StockClient } from "./stock-client";
 
