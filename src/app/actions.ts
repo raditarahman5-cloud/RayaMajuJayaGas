@@ -90,7 +90,14 @@ export async function getDashboardData() {
   const today = new Date().toISOString().split('T')[0];
   const thisMonth = today.substring(0, 7);
 
-  const todayTransactions = db.transactions.filter(t => t.created_at.startsWith(today));
+  const lastResetTime = db.settings.last_reset_time ? new Date(db.settings.last_reset_time).getTime() : 0;
+
+  const todayTransactions = db.transactions.filter(t => {
+    const isToday = t.created_at.startsWith(today);
+    const isAfterReset = new Date(t.created_at).getTime() >= lastResetTime;
+    return isToday && isAfterReset;
+  });
+  
   const monthTransactions = db.transactions.filter(t => t.created_at.startsWith(thisMonth));
 
   const soldToday = todayTransactions.reduce((acc, curr) => acc + curr.tubes_count, 0);
@@ -144,9 +151,27 @@ export async function updateSettings(sellingPrice: number, capitalPrice: number,
   return { success: true };
 }
 
+export async function resetDailyStats() {
+  const db = await getDb();
+  db.settings.current_stock = 0;
+  db.settings.last_reset_time = new Date().toISOString();
+  await saveDb(db);
+  
+  revalidatePath("/", "layout");
+  return { success: true };
+}
+
 export async function getTransactions() {
   const db = await getDb();
-  return db.transactions.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  // Return transactions sorted by: newest date first, but oldest time first within the same date
+  return db.transactions.sort((a, b) => {
+    const dateA = a.created_at.split('T')[0];
+    const dateB = b.created_at.split('T')[0];
+    if (dateA === dateB) {
+      return new Date(a.created_at).getTime() - new Date(b.created_at).getTime(); // Oldest first within the same day
+    }
+    return new Date(dateB).getTime() - new Date(dateA).getTime(); // Newest day first
+  });
 }
 
 export async function getStockHistory() {

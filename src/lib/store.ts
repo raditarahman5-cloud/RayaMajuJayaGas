@@ -29,6 +29,7 @@ export type Settings = {
   capital_price: number;
   max_capacity: number;
   current_stock: number;
+  last_reset_time?: string;
 };
 
 export type DbSchema = {
@@ -48,6 +49,7 @@ const defaultDb: DbSchema = {
     capital_price: 18000,
     max_capacity: 200,
     current_stock: 0,
+    last_reset_time: new Date(0).toISOString(),
   }
 };
 
