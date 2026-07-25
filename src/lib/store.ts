@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import os from 'os';
+import { getStore } from '@netlify/blobs';
 
 export type Transaction = {
   id: string;
@@ -38,9 +38,7 @@ export type DbSchema = {
 };
 
 const isProduction = process.env.NODE_ENV === 'production';
-const DB_PATH = isProduction 
-  ? path.join(os.tmpdir(), 'local-db.json') 
-  : path.join(process.cwd(), 'local-db.json');
+const DB_PATH = path.join(process.cwd(), 'local-db.json');
 
 const defaultDb: DbSchema = {
   transactions: [],
@@ -53,24 +51,47 @@ const defaultDb: DbSchema = {
   }
 };
 
-export function getDb(): DbSchema {
-  const dir = path.dirname(DB_PATH);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
+export async function getDb(): Promise<DbSchema> {
+  if (isProduction) {
+    try {
+      const store = getStore('db');
+      const data = await store.get('local-db', { type: 'json' });
+      if (data) {
+        return data as DbSchema;
+      }
+      return JSON.parse(JSON.stringify(defaultDb));
+    } catch (error) {
+      console.error('Netlify Blobs get error:', error);
+      return JSON.parse(JSON.stringify(defaultDb));
+    }
+  } else {
+    const dir = path.dirname(DB_PATH);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
 
-  if (!fs.existsSync(DB_PATH)) {
-    fs.writeFileSync(DB_PATH, JSON.stringify(defaultDb, null, 2));
-    return JSON.parse(JSON.stringify(defaultDb));
-  }
-  try {
-    const data = fs.readFileSync(DB_PATH, 'utf-8');
-    return JSON.parse(data);
-  } catch (error) {
-    return JSON.parse(JSON.stringify(defaultDb));
+    if (!fs.existsSync(DB_PATH)) {
+      fs.writeFileSync(DB_PATH, JSON.stringify(defaultDb, null, 2));
+      return JSON.parse(JSON.stringify(defaultDb));
+    }
+    try {
+      const data = fs.readFileSync(DB_PATH, 'utf-8');
+      return JSON.parse(data);
+    } catch (error) {
+      return JSON.parse(JSON.stringify(defaultDb));
+    }
   }
 }
 
-export function saveDb(data: DbSchema) {
-  fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
+export async function saveDb(data: DbSchema) {
+  if (isProduction) {
+    try {
+      const store = getStore('db');
+      await store.setJSON('local-db', data);
+    } catch (error) {
+      console.error('Netlify Blobs set error:', error);
+    }
+  } else {
+    fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
+  }
 }

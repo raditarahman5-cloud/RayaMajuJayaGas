@@ -111,8 +111,6 @@ export function PenjualanClient({ settings }: { settings: any }) {
               <p className="text-sm text-slate-500 mt-2">Harga per tabung: Rp {settings.selling_price.toLocaleString('id-ID')}</p>
             </CardContent>
           </Card>
-
-          </Card>
         </div>
       </div>
     </div>

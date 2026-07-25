@@ -10,12 +10,12 @@ export async function getSettings() {
     // const { data } = await supabase.from('settings').select('*').single();
     // return data;
   }
-  const db = getDb();
+  const db = await getDb();
   return db.settings;
 }
 
 export async function addStock(amount: number, description: string) {
-  const db = getDb();
+  const db = await getDb();
   
   if (db.settings.current_stock + amount > db.settings.max_capacity) {
     return { success: false, error: `Kapasitas gudang tidak cukup. Maksimal kapasitas: ${db.settings.max_capacity} tabung.` };
@@ -35,14 +35,14 @@ export async function addStock(amount: number, description: string) {
   };
 
   db.stockHistory.push(history);
-  saveDb(db);
+  await saveDb(db);
   
   revalidatePath("/", "layout");
   return { success: true };
 }
 
 export async function addTransaction(buyerName: string, tubesCount: number) {
-  const db = getDb();
+  const db = await getDb();
   
   if (tubesCount < 1) return { success: false, error: "Jumlah tabung minimal 1." };
   if (tubesCount > db.settings.current_stock) return { success: false, error: "Stok tidak mencukupi." };
@@ -78,14 +78,14 @@ export async function addTransaction(buyerName: string, tubesCount: number) {
 
   db.transactions.push(transaction);
   db.stockHistory.push(history);
-  saveDb(db);
+  await saveDb(db);
 
   revalidatePath("/", "layout");
   return { success: true };
 }
 
 export async function getDashboardData() {
-  const db = getDb();
+  const db = await getDb();
   
   const today = new Date().toISOString().split('T')[0];
   const thisMonth = today.substring(0, 7);
@@ -134,30 +134,32 @@ export async function getDashboardData() {
 }
 
 export async function updateSettings(sellingPrice: number, capitalPrice: number, maxCapacity: number) {
-  const db = getDb();
+  const db = await getDb();
   db.settings.selling_price = sellingPrice;
   db.settings.capital_price = capitalPrice;
   db.settings.max_capacity = maxCapacity;
-  saveDb(db);
+  await saveDb(db);
   
   revalidatePath("/", "layout");
   return { success: true };
 }
 
 export async function getTransactions() {
-  return getDb().transactions.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  const db = await getDb();
+  return db.transactions.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 }
 
 export async function getStockHistory() {
-  return getDb().stockHistory.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  const db = await getDb();
+  return db.stockHistory.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 }
 
 export async function updateTransactionStatus(id: string, is_picked_up: boolean) {
-  const db = getDb();
+  const db = await getDb();
   const txIndex = db.transactions.findIndex(t => t.id === id);
   if (txIndex !== -1) {
     db.transactions[txIndex].is_picked_up = is_picked_up;
-    saveDb(db);
+    await saveDb(db);
     revalidatePath("/", "layout");
     return { success: true };
   }
