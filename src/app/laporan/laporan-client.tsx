@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -17,10 +17,15 @@ import { updateTransactionStatus } from "@/app/actions";
 export function LaporanClient({ transactions, settings }: { transactions: Transaction[], settings: any }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState<'today' | 'all'>('today');
+  const [localTransactions, setLocalTransactions] = useState<Transaction[]>(transactions);
+
+  useEffect(() => {
+    setLocalTransactions(transactions);
+  }, [transactions]);
 
   const lastResetTime = settings.last_reset_time ? new Date(settings.last_reset_time).getTime() : 0;
 
-  const filtered = transactions.filter(t => {
+  const filtered = localTransactions.filter(t => {
     const matchesSearch = t.buyer_name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           t.id.toLowerCase().includes(searchTerm.toLowerCase());
     
@@ -154,7 +159,14 @@ export function LaporanClient({ transactions, settings }: { transactions: Transa
                               variant={t.is_picked_up ? "default" : "outline"} 
                               size="icon" 
                               className={`h-6 w-6 ${t.is_picked_up ? "bg-green-500 hover:bg-green-600 text-white" : ""}`}
-                              onClick={async () => await updateTransactionStatus(t.id, true)}
+                              onClick={async () => {
+                                setLocalTransactions(prev => prev.map(item => item.id === t.id ? { ...item, is_picked_up: true } : item));
+                                try {
+                                  await updateTransactionStatus(t.id, true);
+                                } catch (error) {
+                                  setLocalTransactions(transactions);
+                                }
+                              }}
                               title="Sudah Diambil"
                             >
                               <Check className="h-3 w-3" />
@@ -163,7 +175,14 @@ export function LaporanClient({ transactions, settings }: { transactions: Transa
                               variant={t.is_picked_up === false ? "destructive" : "outline"} 
                               size="icon" 
                               className="h-6 w-6"
-                              onClick={async () => await updateTransactionStatus(t.id, false)}
+                              onClick={async () => {
+                                setLocalTransactions(prev => prev.map(item => item.id === t.id ? { ...item, is_picked_up: false } : item));
+                                try {
+                                  await updateTransactionStatus(t.id, false);
+                                } catch (error) {
+                                  setLocalTransactions(transactions);
+                                }
+                              }}
                               title="Belum Diambil"
                             >
                               <X className="h-3 w-3" />
