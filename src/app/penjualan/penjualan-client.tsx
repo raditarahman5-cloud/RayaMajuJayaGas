@@ -7,13 +7,15 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { addTransaction } from "@/app/actions";
 import { useToast } from "@/hooks/use-toast";
-import { ShoppingCart, Users, CreditCard } from "lucide-react";
+import { ShoppingCart, Users, CreditCard, Camera, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { ScanOrderModal } from "@/components/scan-order-modal";
 
 export function PenjualanClient({ settings }: { settings: any }) {
   const [buyerName, setBuyerName] = useState("");
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isScanModalOpen, setIsScanModalOpen] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -45,23 +47,55 @@ export function PenjualanClient({ settings }: { settings: any }) {
     }
   };
 
+  const handleScanComplete = (result: { buyerName: string; tubesCount: number }) => {
+    setBuyerName(result.buyerName);
+    setAmount(result.tubesCount.toString());
+    toast({
+      title: "Hasil Scan Diterapkan",
+      description: `Nama: ${result.buyerName}, Jumlah: ${result.tubesCount} tabung.`,
+    });
+  };
+
   const amountNum = Number(amount) || 0;
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Penjualan</h2>
-        <p className="text-slate-500 dark:text-slate-400">Catat transaksi penjualan tabung LPG baru.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Penjualan</h2>
+          <p className="text-slate-500 dark:text-slate-400">Catat transaksi penjualan tabung LPG baru secara manual atau otomatis via scan foto.</p>
+        </div>
+        <Button
+          type="button"
+          onClick={() => setIsScanModalOpen(true)}
+          className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md flex items-center gap-2"
+        >
+          <Camera className="h-4 w-4" />
+          <Sparkles className="h-4 w-4" />
+          Scan Nota / Foto Pemesanan
+        </Button>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="shadow-sm">
-          <CardHeader className="bg-blue-50/50 dark:bg-blue-950/20 border-b">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <ShoppingCart className="h-5 w-5 text-blue-500" />
-              Form Transaksi
-            </CardTitle>
-            <CardDescription>Masukkan rincian penjualan.</CardDescription>
+          <CardHeader className="bg-blue-50/50 dark:bg-blue-950/20 border-b flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <ShoppingCart className="h-5 w-5 text-blue-500" />
+                Form Transaksi
+              </CardTitle>
+              <CardDescription>Masukkan rincian penjualan.</CardDescription>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsScanModalOpen(true)}
+              className="text-xs border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 flex items-center gap-1.5"
+            >
+              <Camera className="h-3.5 w-3.5" />
+              Scan Nota
+            </Button>
           </CardHeader>
           <CardContent className="pt-6">
             <form onSubmit={handleTransaction} className="space-y-4">
@@ -113,6 +147,13 @@ export function PenjualanClient({ settings }: { settings: any }) {
           </Card>
         </div>
       </div>
+
+      <ScanOrderModal
+        isOpen={isScanModalOpen}
+        onClose={() => setIsScanModalOpen(false)}
+        onScanComplete={handleScanComplete}
+      />
     </div>
   );
 }
+
