@@ -7,19 +7,30 @@ export async function POST(req: Request) {
 
     const contentType = req.headers.get("content-type") || "";
 
+    let mimeType = "image/jpeg";
+
     if (contentType.includes("multipart/form-data")) {
       const formData = await req.formData();
-      const file = formData.get("image") as File | null;
-      if (!file) {
+      const fileEntry = formData.get("image");
+      
+      if (!fileEntry) {
         return NextResponse.json(
           { success: false, error: "File gambar tidak ditemukan dalam formulir." },
           { status: 400 }
         );
       }
-      fileName = file.name;
-      const arrayBuffer = await file.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-      base64Image = buffer.toString("base64");
+      
+      if (typeof fileEntry === "string") {
+        base64Image = fileEntry.replace(/^data:image\/\w+;base64,/, "");
+        mimeType = fileEntry.match(/^data:(image\/\w+);base64,/)?.[1] || "image/jpeg";
+      } else {
+        const file = fileEntry as File;
+        fileName = file.name;
+        mimeType = file.type || "image/jpeg";
+        const arrayBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        base64Image = buffer.toString("base64");
+      }
     } else if (contentType.includes("application/json")) {
       const body = await req.json();
       if (!body.image) {
@@ -29,6 +40,7 @@ export async function POST(req: Request) {
         );
       }
       base64Image = body.image.replace(/^data:image\/\w+;base64,/, "");
+      mimeType = body.image.match(/^data:(image\/\w+);base64,/)?.[1] || "image/jpeg";
     } else {
       return NextResponse.json(
         { success: false, error: "Content-Type tidak didukung. Gunakan multipart/form-data atau application/json." },
@@ -60,17 +72,20 @@ export async function POST(req: Request) {
                 {
                   parts: [
                     {
-                      text: "Kamu adalah sistem OCR pencatat pesanan LPG Pangkalan Raya Maju Jaya. Analisis foto nota/catatan pesanan ini dan dapatkan 2 informasi utama:\n1. Nama Pembeli / Pemesan / Toko / Perwakilan (buyer_name)\n2. Jumlah Tabung LPG yang dipesan (tubes_count sebagai integer angka positif)\n\nJawab HANYA dengan JSON murni tanpa format markdown seperti berikut:\n{\"buyer_name\": \"...\", \"tubes_count\": 0}\nJika nama pembeli tidak tertulis jelas, gunakan \"Pemesan Nota\". Jika jumlah tabung tidak tertulis jelas, berikan perkiraan 1.",
+                      text: "Kamu adalah sistem OCR pencatat pesanan LPG. Tugasmu adalah menganalisis foto nota/catatan/tulisan tangan pesanan ini dan mengekstrak 2 informasi utama:\n1. Nama Pembeli / Pemesan / Toko / Perwakilan (buyer_name)\n2. Jumlah Tabung LPG yang dipesan (tubes_count sebagai integer angka positif)\n\nPerhatikan baik-baik tulisan tangan atau teks yang ada di gambar. Jika ada tulisan seperti '3 tabung', '3 tbg', 'tiga', atau angka saja yang mengindikasikan jumlah, gunakan angka tersebut. Jika ada nama orang atau warung, gunakan sebagai buyer_name.\n\nKEMBALIKAN HANYA OBJEK JSON MURNI TANPA MARKDOWN DENGAN FORMAT PERSIS SEPERTI INI:\n{\"buyer_name\": \"Budi\", \"tubes_count\": 3}\n\nJika nama pembeli tidak tertulis sama sekali, gunakan \"Pemesan Nota\". Jika jumlah tabung tidak tertulis jelas, berikan perkiraan angka 1.",
                     },
                     {
                       inlineData: {
-                        mimeType: "image/jpeg",
+                        mimeType: mimeType,
                         data: base64Image,
                       },
                     },
                   ],
                 },
               ],
+              generationConfig: {
+                responseMimeType: "application/json",
+              }
             }),
           }
         );
@@ -79,11 +94,28 @@ export async function POST(req: Request) {
           const resData = await response.json();
           const textResult = resData.candidates?.[0]?.content?.parts?.[0]?.text || "";
           
-          const cleanJsonText = textResult.replace(/```json/g, "").replace(/```/g, "").trim();
-          const parsed = JSON.parse(cleanJsonText);
+          let parsed: any = {};
+          try {
+            const cleanJsonText = textResult.replace(/```json/g, "").replace(/```/g, "").trim();
+            const jsonMatch = cleanJsonText.match(/\{[\s\S]*\}/);
+            
+            if (jsonMatch) {
+              parsed = JSON.parse(jsonMatch[0]);
+            } else {
+              parsed = JSON.parse(cleanJsonText);
+            }
+          } catch (e) {
+            console.warn("Failed to parse Gemini JSON output:", textResult, e);
+          }
 
-          buyerName = parsed.buyer_name || "Pemesan Nota";
-          tubesCount = Number(parsed.tubes_count) || 1;
+          buyerName = parsed.buyer_name || parsed.nama_pembeli || parsed.nama || "Pemesan Nota";
+          
+          let count = parsed.tubes_count || parsed.jumlah_tabung || parsed.jumlah || 0;
+          if (typeof count === "string") {
+            const numMatch = count.match(/\d+/);
+            count = numMatch ? parseInt(numMatch[0], 10) : 1;
+          }
+          tubesCount = Number(count) || 1;
         }
       } catch (err) {
         console.warn("Gemini API scan failed, falling back to smart heuristic parser:", err);
